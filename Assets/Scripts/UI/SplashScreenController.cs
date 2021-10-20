@@ -13,7 +13,7 @@ namespace Monochrome.UI
 
         private IEnumerator Splash()
         {
-            yield return new WaitForSeconds(2.0f);
+            yield return new WaitForSeconds(1.8f);
             SceneManager.LoadScene("MainMenu");
         }
     }

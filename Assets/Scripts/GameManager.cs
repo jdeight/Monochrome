@@ -8,15 +8,17 @@ namespace Monochrome
         public static bool IsPaused = false;
         public static bool CanPause = false;
 
+        public static bool ColorShift = false;
+
+        #if UNITY_EDITOR
         private void Awake()
         {
-            #if UNITY_EDITOR
-            QualitySettings.vSyncCount = 0;  // VSync must be disabled
+            QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 200;
-            #endif
 
             Debug.Log("GameManager initialized.");
         }
+        #endif
 
     }
 }

@@ -14,9 +14,9 @@ namespace Monochrome
 
         private Vector2 currentMovementInput;
 
-        private float jumpForce = 5f;
-        private float walkSpeed = 4f;
-        private float sprintMultipier = 1.8f;
+        private float jumpForce = 12f;
+        private float walkSpeed = 6f;
+        private float sprintMultipier = 1.65f;
 
         [SerializeField] private bool isMovePressed;
         [SerializeField] private bool isJumpPressed;
@@ -25,7 +25,7 @@ namespace Monochrome
 
         [SerializeField] private bool isColorActive = false;
 
-
+        private int groundMask;
 
         private void Awake()
         {
@@ -42,8 +42,24 @@ namespace Monochrome
             inputActions.Enable();
         }
 
+        private void Start()
+        {
+            groundMask = 1 << LayerMask.NameToLayer("Ground");
+        }
+
         private void FixedUpdate()
         {
+            RaycastHit2D groundCheck = Physics2D.Raycast(transform.position, Vector2.down, 1.4f, groundMask);
+
+            if (groundCheck.collider != null)
+            {
+                isGrounded = true;
+            }
+            else
+            {
+                isGrounded = false;
+            }
+
             rb.velocity = new Vector2((currentMovementInput.x * walkSpeed), rb.velocity.y);
 
             if (isSprintPressed)
@@ -51,7 +67,7 @@ namespace Monochrome
                 rb.velocity = new Vector2((rb.velocity.x * sprintMultipier), rb.velocity.y);
             }
 
-            if (isJumpPressed && rb.velocity.y <= 0 /*&& isGrounded*/) 
+            if (isJumpPressed && rb.velocity.y <= 0 && isGrounded) 
             {
                 rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             }
@@ -80,7 +96,6 @@ namespace Monochrome
 
             // Color shifting ability
             inputActions.Player.ColorShift.started += OnColorShift;
-
         }
 
         private void OnMovementInput(InputAction.CallbackContext context)
@@ -101,8 +116,8 @@ namespace Monochrome
 
         private void OnColorShift(InputAction.CallbackContext context)
         {
-            // Invert bool
             isColorActive ^= true;
+            GameManager.ColorShift = !GameManager.ColorShift;
         }
     }
 }
