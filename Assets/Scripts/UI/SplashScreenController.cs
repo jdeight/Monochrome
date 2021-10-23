@@ -11,7 +11,7 @@ namespace Monochrome.UI
             StartCoroutine(Splash());
         }
 
-        private IEnumerator Splash()
+        private static IEnumerator Splash()
         {
             yield return new WaitForSeconds(1.8f);
             SceneManager.LoadScene("MainMenu");

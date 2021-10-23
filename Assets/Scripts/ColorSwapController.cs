@@ -4,30 +4,28 @@ namespace Monochrome
 {
     public class ColorSwapController : MonoBehaviour
     {
-        private SpriteRenderer spriteRenderer;
-        private BoxCollider2D boxCollider2D;
+        [SerializeField] private bool startSwapped;
 
-        [SerializeField] private bool startSwapped = false;
-
-        private Color activeColor;
-        private Color inactiveColor;
+        private SpriteRenderer _spriteRenderer;
+        private BoxCollider2D _boxCollider2D;
+        
+        private Color _activeColor;
+        private Color _inactiveColor;
 
         private void Awake()
         {
-            spriteRenderer = GetComponent<SpriteRenderer>();
-            boxCollider2D = GetComponent<BoxCollider2D>();
+            _spriteRenderer = GetComponent<SpriteRenderer>();
+            _boxCollider2D = GetComponent<BoxCollider2D>();
         }
 
         private void Start()
         {
-            activeColor = spriteRenderer.color;
-            inactiveColor = new Color(activeColor.r, activeColor.g, activeColor.b, 0.2f);
+            _activeColor = _spriteRenderer.color;
+            _inactiveColor = new Color(_activeColor.r, _activeColor.g, _activeColor.b, 0.2f);
 
-            if (startSwapped)
-            {
-                spriteRenderer.color = inactiveColor;
-                boxCollider2D.enabled = false;
-            }
+            if (!startSwapped) return;
+            _spriteRenderer.color = _inactiveColor;
+            _boxCollider2D.enabled = false;
         }
 
         private void FixedUpdate()
@@ -36,26 +34,26 @@ namespace Monochrome
             {
                 if (startSwapped) 
                 {
-                    spriteRenderer.color = activeColor;
-                    boxCollider2D.enabled = true;
+                    _spriteRenderer.color = _activeColor;
+                    _boxCollider2D.enabled = true;
                 } 
                 else 
                 {
-                    spriteRenderer.color = inactiveColor;
-                    boxCollider2D.enabled = false;
+                    _spriteRenderer.color = _inactiveColor;
+                    _boxCollider2D.enabled = false;
                 }
             }
             else if (!GameManager.ColorShift)
             {
                 if (startSwapped) 
                 {
-                    spriteRenderer.color = inactiveColor;
-                    boxCollider2D.enabled = false;
+                    _spriteRenderer.color = _inactiveColor;
+                    _boxCollider2D.enabled = false;
                 } 
                 else 
                 {
-                    spriteRenderer.color = activeColor;
-                    boxCollider2D.enabled = true;
+                    _spriteRenderer.color = _activeColor;
+                    _boxCollider2D.enabled = true;
                 }
             }
         }

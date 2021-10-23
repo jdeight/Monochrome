@@ -6,102 +6,148 @@ namespace Monochrome
 {
     public class PlayerController : MonoBehaviour
     {
-        private MonochromeActions inputActions;
+        private MonochromeActions _inputActions;
 
-        private Rigidbody2D rb;
+        private Rigidbody2D _rb;
 
-        private Animator animator;
+        private Animator _animator;
 
-        private Vector2 currentMovementInput;
+        private Vector2 _currentMovementInput;
 
-        private float jumpForce = 12f;
-        private float walkSpeed = 6f;
-        private float sprintMultipier = 1.65f;
+        private const float JumpForce = 12f;
+        private const float WalkSpeed = 6f;
+        private const float SprintMultiplier = 1.65f;
 
         [SerializeField] private bool isMovePressed;
         [SerializeField] private bool isJumpPressed;
         [SerializeField] private bool isSprintPressed;
-        [SerializeField] private bool isGrounded = false;
+        [SerializeField] private bool isGrounded;
 
-        [SerializeField] private bool isColorActive = false;
+        // Animation States
+        private string _currentAnimation;
+        
+        // Fix this mess later..
+        private const string PlayerIdle = "player_idle";
+        private const string PlayerWalk = "player_walk";
+        private const string PlayerRun = "player_run";
+        private const string PlayerCrouch = "player_crouch";
+        private const string PlayerLookup = "player_lookup";
 
-        private int groundMask;
+        private Vector3 _currentScale;
+        private bool _facingRight = true;
+
+        private int _groundMask;
 
         private void Awake()
         {
-            inputActions = new MonochromeActions();
+            _inputActions = new MonochromeActions();
 
-            rb = GetComponent<Rigidbody2D>();
-            animator = GetComponent<Animator>();
+            _rb = GetComponent<Rigidbody2D>();
+            _animator = GetComponent<Animator>();
 
             BindInputActionCallbacks();
         }
 
         private void OnEnable()
         {
-            inputActions.Enable();
+            _inputActions.Enable();
         }
 
         private void Start()
         {
-            groundMask = 1 << LayerMask.NameToLayer("Ground");
+            _groundMask = 1 << LayerMask.NameToLayer("Ground");
+            _currentScale = transform.localScale;
         }
 
         private void FixedUpdate()
         {
-            RaycastHit2D groundCheck = Physics2D.Raycast(transform.position, Vector2.down, 1.4f, groundMask);
+            GroundCheck();
+            //UpdateAnimation();
 
-            if (groundCheck.collider != null)
+            if (!isMovePressed)
             {
-                isGrounded = true;
-            }
-            else
-            {
-                isGrounded = false;
+                ChangeAnimationState(PlayerIdle);
             }
 
-            rb.velocity = new Vector2((currentMovementInput.x * walkSpeed), rb.velocity.y);
-
-            if (isSprintPressed)
+            if (_currentMovementInput.y < 0 && isGrounded)
             {
-                rb.velocity = new Vector2((rb.velocity.x * sprintMultipier), rb.velocity.y);
+                ChangeAnimationState(PlayerCrouch);
             }
 
-            if (isJumpPressed && rb.velocity.y <= 0 && isGrounded) 
+            if (_currentMovementInput.y > 0 && isGrounded)
             {
-                rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+                ChangeAnimationState(PlayerLookup);
+            }
+
+            if (isMovePressed && _currentMovementInput.y == 0 && !isSprintPressed)
+            {
+                ChangeAnimationState(PlayerWalk);
+            }
+
+            _rb.velocity = new Vector2((_currentMovementInput.x * WalkSpeed), _rb.velocity.y);
+
+            if (isSprintPressed && isMovePressed)
+            {
+                ChangeAnimationState(PlayerRun);
+                _rb.velocity = new Vector2((_rb.velocity.x * SprintMultiplier), _rb.velocity.y);
+            }
+
+            if (isJumpPressed && _rb.velocity.y <= 0 && isGrounded) 
+            {
+                _rb.velocity = new Vector2(_rb.velocity.x, JumpForce);
             }
         }
 
         private void OnDisable()
         {
-            inputActions.Disable();
+            _inputActions.Disable();
+        }
+
+        private void GroundCheck()
+        {
+            RaycastHit2D groundCheck = Physics2D.Raycast(transform.position, Vector2.down, 1.4f, _groundMask);
+            isGrounded = (groundCheck.collider != null);
+        }
+
+        // private void UpdateAnimation()
+        // {
+        // }
+
+        private void ChangeAnimationState(string targetAnimation)
+        {
+            if (_currentAnimation == targetAnimation) return;
+            _animator.Play(targetAnimation);
+            _currentAnimation = targetAnimation;
         }
 
         private void BindInputActionCallbacks()
         {
             // Movement
-            inputActions.Player.Move.started += OnMovementInput;
-            inputActions.Player.Move.canceled += OnMovementInput;
-            inputActions.Player.Move.performed += OnMovementInput;
+            _inputActions.Player.Move.started += OnMovementInput;
+            _inputActions.Player.Move.canceled += OnMovementInput;
+            _inputActions.Player.Move.performed += OnMovementInput;
 
             // Jumping
-            inputActions.Player.Jump.started += OnJump;
-            inputActions.Player.Jump.canceled += OnJump;
-            inputActions.Player.Jump.performed += OnJump;
+            _inputActions.Player.Jump.started += OnJump;
+            _inputActions.Player.Jump.canceled += OnJump;
+            _inputActions.Player.Jump.performed += OnJump;
 
             // Sprinting
-            inputActions.Player.Sprint.started += OnSprint;
-            inputActions.Player.Sprint.canceled += OnSprint;
+            _inputActions.Player.Sprint.started += OnSprint;
+            _inputActions.Player.Sprint.canceled += OnSprint;
 
             // Color shifting ability
-            inputActions.Player.ColorShift.started += OnColorShift;
+            _inputActions.Player.ColorShift.started += OnColorShift;
         }
 
         private void OnMovementInput(InputAction.CallbackContext context)
         {
-            currentMovementInput = context.ReadValue<Vector2>();
-            isMovePressed = currentMovementInput.x != 0 || currentMovementInput.y != 0;
+            _currentMovementInput = context.ReadValue<Vector2>();
+            isMovePressed = _currentMovementInput.x != 0 || _currentMovementInput.y != 0;
+            
+            if (_currentMovementInput.x < 0 && _facingRight) { _currentScale.x = -1; _facingRight = false;}
+            else if (_currentMovementInput.x > 0 && !_facingRight) {_currentScale.x = 1; _facingRight = true; }
+            transform.localScale = _currentScale;
         }
 
         private void OnJump(InputAction.CallbackContext context)
@@ -114,9 +160,8 @@ namespace Monochrome
             isSprintPressed = context.ReadValueAsButton();
         }
 
-        private void OnColorShift(InputAction.CallbackContext context)
+        private static void OnColorShift(InputAction.CallbackContext context)
         {
-            isColorActive ^= true;
             GameManager.ColorShift = !GameManager.ColorShift;
         }
     }
