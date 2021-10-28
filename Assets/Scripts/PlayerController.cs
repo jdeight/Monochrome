@@ -86,7 +86,7 @@ namespace Monochrome
 
             _rb.velocity = new Vector2((_currentMovementInput.x * WalkSpeed), _rb.velocity.y);
 
-            if (isSprintPressed && isMovePressed)
+            if (isSprintPressed && isMovePressed && _currentMovementInput.y >= 0)
             {
                 ChangeAnimationState(PlayerRun);
                 _rb.velocity = new Vector2((_rb.velocity.x * SprintMultiplier), _rb.velocity.y);

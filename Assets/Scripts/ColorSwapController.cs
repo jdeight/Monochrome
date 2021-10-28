@@ -6,54 +6,56 @@ namespace Monochrome
     {
         [SerializeField] private bool startSwapped;
 
-        private SpriteRenderer _spriteRenderer;
+        protected SpriteRenderer SpriteRenderer;
         private BoxCollider2D _boxCollider2D;
-        
-        private Color _activeColor;
+        private CapsuleCollider2D _playerCollider2D;
+
+        protected Color ActiveColor;
         private Color _inactiveColor;
 
-        private void Awake()
+        protected void Awake()
         {
-            _spriteRenderer = GetComponent<SpriteRenderer>();
+            SpriteRenderer = GetComponent<SpriteRenderer>();
             _boxCollider2D = GetComponent<BoxCollider2D>();
+            _playerCollider2D = FindObjectOfType<PlayerController>().GetComponent<CapsuleCollider2D>();
         }
 
         private void Start()
         {
-            _activeColor = _spriteRenderer.color;
-            _inactiveColor = new Color(_activeColor.r, _activeColor.g, _activeColor.b, 0.2f);
+            ActiveColor = SpriteRenderer.color;
+            _inactiveColor = new Color(ActiveColor.r, ActiveColor.g, ActiveColor.b, 0.2f);
 
             if (!startSwapped) return;
-            _spriteRenderer.color = _inactiveColor;
-            _boxCollider2D.enabled = false;
+            SpriteRenderer.color = _inactiveColor;
+            Physics2D.IgnoreCollision(_boxCollider2D, _playerCollider2D);
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
             if (GameManager.ColorShift)
             {
                 if (startSwapped) 
                 {
-                    _spriteRenderer.color = _activeColor;
-                    _boxCollider2D.enabled = true;
+                    SpriteRenderer.color = ActiveColor;
+                    Physics2D.IgnoreCollision(_playerCollider2D, _boxCollider2D, false);
                 } 
                 else 
                 {
-                    _spriteRenderer.color = _inactiveColor;
-                    _boxCollider2D.enabled = false;
+                    SpriteRenderer.color = _inactiveColor;
+                    Physics2D.IgnoreCollision(_playerCollider2D, _boxCollider2D);
                 }
             }
             else if (!GameManager.ColorShift)
             {
                 if (startSwapped) 
                 {
-                    _spriteRenderer.color = _inactiveColor;
-                    _boxCollider2D.enabled = false;
+                    SpriteRenderer.color = _inactiveColor;
+                    Physics2D.IgnoreCollision(_playerCollider2D, _boxCollider2D);
                 } 
                 else 
                 {
-                    _spriteRenderer.color = _activeColor;
-                    _boxCollider2D.enabled = true;
+                    SpriteRenderer.color = ActiveColor;
+                    Physics2D.IgnoreCollision(_playerCollider2D, _boxCollider2D, false);
                 }
             }
         }
